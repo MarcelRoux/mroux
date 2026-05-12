@@ -1,0 +1,25 @@
+{
+  "name": "mroux",
+  "version": "1.0.0",
+  "description": "Personal website of Marcel, a professional software engineer and explorer.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.1.1",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "astro": "^6.3.1"
+  }
+}
