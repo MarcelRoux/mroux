@@ -132,6 +132,10 @@ th {
   font-size: 0.9rem;
 }
 
+th.num {
+  text-align: right;
+}
+
 td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -146,5 +150,18 @@ td.num {
   .site-nav {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  th,
+  td {
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 }

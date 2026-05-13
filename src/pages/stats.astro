@@ -137,7 +137,7 @@ const freshnessRows = [
                 <thead>
                     <tr>
                         <th>Metric</th>
-                        <th>Value</th>
+                        <th class="num">Value</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,7 +145,7 @@ const freshnessRows = [
                         freshnessRows.map(([label, value]) => (
                             <tr>
                                 <td>{label}</td>
-                                <td>{value}</td>
+                                <td class="num">{value}</td>
                             </tr>
                         ))
                     }
