@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+    const posts = await getCollection(
+        "blog",
+        ({ data }) => data.status === "published",
+    );
+
+    return posts.map((post) => ({
+        params: { slug: post.data.slug },
+        props: { post },
+    }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+import { getContentMetrics } from "../../lib/contentMetrics";
+const { wordCount, readMinutes } = getContentMetrics(post.body ?? "");
+---
+
+<BaseLayout title={post.data.title}>
+    <article>
+        <h1>{post.data.title}</h1>
+        <p class="small">
+            {readMinutes} min read - {wordCount} words
+        </p>
+        <p class="small">
+            Published {post.data.date.toISOString().slice(0, 10)}
+            {
+                post.data.updated
+                    ? ` - Updated ${post.data.updated.toISOString().slice(0, 10)}`
+                    : ""
+            }
+        </p>
+        <p>{post.data.description}</p>
+        <Content />
+    </article>
+</BaseLayout>

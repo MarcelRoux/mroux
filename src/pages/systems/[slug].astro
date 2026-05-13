@@ -1,0 +1,35 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getContentMetrics } from "../../lib/contentMetrics";
+
+export async function getStaticPaths() {
+    const notes = await getCollection("systems");
+
+    return notes.map((note) => ({
+        params: { slug: note.data.slug },
+        props: { note },
+    }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+const { wordCount, readMinutes } = getContentMetrics(note.body ?? "");
+---
+
+<BaseLayout title={note.data.title}>
+    <article>
+        <h1>{note.data.title}</h1>
+        <p class="small">{readMinutes} min read - {wordCount} words</p>
+        <p class="small">
+            Published {note.data.date.toISOString().slice(0, 10)}
+            {
+                note.data.updated
+                    ? ` - Updated ${note.data.updated.toISOString().slice(0, 10)}`
+                    : ""
+            }
+        </p>
+        <p>{note.data.description}</p>
+        <Content />
+    </article>
+</BaseLayout>

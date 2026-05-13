@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getContentMetrics } from "../../lib/contentMetrics";
+
+export async function getStaticPaths() {
+    const projects = await getCollection("projects");
+
+    return projects.map((project) => ({
+        params: { slug: project.data.slug },
+        props: { project },
+    }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { wordCount, readMinutes } = getContentMetrics(project.body ?? "");
+---
+
+<BaseLayout title={project.data.title}>
+    <article>
+        <h1>{project.data.title}</h1>
+        <p class="small">{readMinutes} min read - {wordCount} words</p>
+        <p class="small">
+            Status: {project.data.status}
+            {
+                project.data.started
+                    ? ` - Started ${project.data.started.toISOString().slice(0, 10)}`
+                    : ""
+            }
+            {
+                project.data.updated
+                    ? ` - Updated ${project.data.updated.toISOString().slice(0, 10)}`
+                    : ""
+            }
+        </p>
+        <p>{project.data.description}</p>
+
+        {
+            (project.data.repo_url || project.data.external_url) && (
+                <p class="small">
+                    {project.data.repo_url && (
+                        <a href={project.data.repo_url}>Repository</a>
+                    )}
+                    {project.data.repo_url && project.data.external_url
+                        ? " - "
+                        : ""}
+                    {project.data.external_url && (
+                        <a href={project.data.external_url}>External Link</a>
+                    )}
+                </p>
+            )
+        }
+
+        <Content />
+    </article>
+</BaseLayout>

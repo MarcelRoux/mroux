@@ -1,0 +1,54 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getContentMetrics } from "../../lib/contentMetrics";
+
+export async function getStaticPaths() {
+    const entries = await getCollection(
+        "benchmarks",
+        ({ data }) => data.status === "published",
+    );
+
+    return entries.map((entry) => ({
+        params: { slug: entry.data.slug },
+        props: { entry },
+    }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { wordCount, readMinutes } = getContentMetrics(entry.body ?? "");
+---
+
+<BaseLayout title={entry.data.title}>
+    <article>
+        <h1>{entry.data.title}</h1>
+        <p class="small">{readMinutes} min read - {wordCount} words</p>
+        <p class="small">
+            Published {entry.data.date.toISOString().slice(0, 10)}
+            {
+                entry.data.updated
+                    ? ` - Updated ${entry.data.updated.toISOString().slice(0, 10)}`
+                    : ""
+            }
+        </p>
+        <p>{entry.data.description}</p>
+
+        {
+            entry.data.metrics.length > 0 && (
+                <>
+                    <h2>Metrics</h2>
+                    <ul>
+                        {entry.data.metrics.map((metric) => (
+                            <li>
+                                {metric.name}: {metric.value}
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            )
+        }
+
+        <Content />
+    </article>
+</BaseLayout>
