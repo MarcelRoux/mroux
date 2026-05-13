@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const notes = (await getCollection("systems")).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+---
+
+<BaseLayout title="Systems">
+    <h1>Systems</h1>
+    <ul>
+        {
+            notes.map((note) => (
+                <li>
+                    <a href={`/systems/${note.data.slug}`}>{note.data.title}</a>
+                    <p>{note.data.description}</p>
+                </li>
+            ))
+        }
+    </ul>
+</BaseLayout>

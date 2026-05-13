@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+import { getCollection } from "astro:content";
+
+const entries = (
+    await getCollection("benchmarks", ({ data }) => data.status === "published")
+).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title="Benchmarks">
+    <h1>Benchmarks</h1>
+    <ul>
+        {
+            entries.map((entry) => (
+                <li>
+                    <a href={`/benchmarks/${entry.data.slug}`}>
+                        {entry.data.title}
+                    </a>
+                    <p>{entry.data.description}</p>
+                </li>
+            ))
+        }
+    </ul>
+</BaseLayout>
