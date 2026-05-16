@@ -189,3 +189,27 @@ Avoid:
 - overdesigned hero sections
 
 The best version of the site should feel like an engineer’s public notebook, curated portfolio, and professional identity layer.
+
+## Latest Notes
+
+Stylistic preference:
+
+Button:
+
+- bg-sky-400
+- hover:bg-sky-300
+- text-zinc-950
+- font-semibold
+- px-8
+- py-3
+- rounded-lg
+- transition-colors
+
+Heading:
+
+- text-sky-400
+- text-xs
+- font-mono
+- uppercase
+- tracking-widest
+- mb-6
