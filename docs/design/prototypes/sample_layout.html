@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engineering Systems Atlas Prototype</title>
+    <style>
+        :root {
+            --bg: #f8f8f7;
+            --surface: #ffffff;
+            --surface-muted: #f3f4f6;
+            --text: #1f2933;
+            --muted: #5f6c78;
+            --border: #dce1e6;
+            --accent: #0d5b8f;
+            --accent-soft: #e7f3f8;
+            --infra: #dbeafe;
+            --infra-border: #60a5fa;
+            --distributed: #dcfce7;
+            --distributed-border: #4ade80;
+            --data: #fef3c7;
+            --data-border: #f59e0b;
+            --software: #ede9fe;
+            --software-border: #8b5cf6;
+            --ai: #fce7f3;
+            --ai-border: #ec4899;
+            --shadow: 0 1px 2px rgb(15 23 42 / 8%), 0 8px 24px rgb(15 23 42 / 6%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.55;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+            background: rgb(248 248 247 / 92%);
+            backdrop-filter: blur(10px);
+        }
+
+        .site-header-inner {
+            width: min(100% - 2rem, 86rem);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 0;
+        }
+
+        .brand {
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .top-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .page-shell {
+            width: min(100% - 2rem, 86rem);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 15rem minmax(0, 48rem) 17rem;
+            gap: 2rem;
+            padding: 2rem 0 4rem;
+            align-items: start;
+        }
+
+        .left-rail,
+        .right-rail {
+            position: sticky;
+            top: 4.75rem;
+            align-self: start;
+        }
+
+        .rail-card,
+        .article-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .rail-card {
+            padding: 1rem;
+        }
+
+        .rail-eyebrow {
+            margin: 0 0 0.7rem;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .section-nav {
+            display: grid;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .section-nav a {
+            display: block;
+            border-radius: 10px;
+            padding: 0.45rem 0.55rem;
+            color: var(--muted);
+        }
+
+        .section-nav a.active {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .section-nav .nested {
+            margin-left: 0.8rem;
+            border-left: 1px solid var(--border);
+            padding-left: 0.45rem;
+        }
+
+        .article-card {
+            padding: clamp(1.25rem, 2vw, 2.25rem);
+        }
+
+        .article-kicker {
+            margin: 0 0 0.5rem;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .article-card h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3.35rem);
+            line-height: 1.02;
+            letter-spacing: -0.055em;
+        }
+
+        .lede {
+            margin: 1rem 0 1.5rem;
+            color: var(--muted);
+            font-size: 1.1rem;
+        }
+
+        .article-section {
+            border-top: 1px solid var(--border);
+            padding-top: 1.3rem;
+            margin-top: 1.5rem;
+        }
+
+        .article-section h2 {
+            margin: 0 0 0.7rem;
+            font-size: 1.25rem;
+            letter-spacing: -0.025em;
+        }
+
+        .code-block {
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 1rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 0.86rem;
+        }
+
+        .progress-card {
+            margin-bottom: 1rem;
+        }
+
+        .progress-track {
+            height: 0.45rem;
+            overflow: hidden;
+            border-radius: 999px;
+            background: var(--surface-muted);
+        }
+
+        .progress-fill {
+            width: 42%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--accent);
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 0.6rem;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .progress-outline {
+            display: grid;
+            gap: 0.22rem;
+            margin-top: 0.85rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+            font-size: 0.78rem;
+        }
+
+        .progress-outline a {
+            display: block;
+            border-radius: 9px;
+            padding: 0.35rem 0.45rem;
+            color: var(--muted);
+        }
+
+        .progress-outline a.active {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        .progress-outline .subheading {
+            margin-left: 0.65rem;
+            border-left: 1px solid var(--border);
+            padding-left: 0.45rem;
+            font-size: 0.72rem;
+        }
+
+        .atlas-card {
+            padding: 0.85rem;
+        }
+
+        .atlas-title-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .atlas-title {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+        }
+
+        .atlas-mode {
+            color: var(--muted);
+            font-size: 0.72rem;
+        }
+
+        .atlas-stack {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .domain-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .domain-card.active {
+            border-color: var(--infra-border);
+            box-shadow: 0 0 0 3px rgb(96 165 250 / 18%);
+        }
+
+        .domain-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .domain-header .dot {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: 0.55;
+        }
+
+        .domain-header .label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .domain-header .status {
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .domain-card.infrastructure .domain-header {
+            background: var(--infra);
+            color: #1e3a8a;
+        }
+
+        .domain-card.distributed .domain-header {
+            background: var(--distributed);
+            color: #166534;
+        }
+
+        .domain-card.data .domain-header {
+            background: var(--data);
+            color: #92400e;
+        }
+
+        .domain-card.software .domain-header {
+            background: var(--software);
+            color: #4c1d95;
+        }
+
+        .domain-card.ai .domain-header {
+            background: var(--ai);
+            color: #9d174d;
+        }
+
+        .domain-body {
+            display: none;
+            padding: 0.7rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        }
+
+        .domain-card.active .domain-body {
+            display: block;
+        }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.45rem;
+        }
+
+        .topic {
+            min-height: 2.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            padding: 0.45rem;
+            text-align: center;
+            color: var(--text);
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .topic.current {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .relation-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.65rem;
+        }
+
+        .relation-chip {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface-muted);
+            padding: 0.25rem 0.5rem;
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
+        .atlas-footer-link {
+            display: block;
+            margin-top: 0.75rem;
+            border-radius: 12px;
+            background: var(--surface-muted);
+            padding: 0.55rem 0.65rem;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .mobile-context {
+            display: none;
+            margin: 1rem 0;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            padding: 0.85rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1180px) {
+            .page-shell {
+                grid-template-columns: 13rem minmax(0, 1fr);
+            }
+
+            .right-rail {
+                display: none;
+            }
+
+            .mobile-context {
+                display: block;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .site-header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .page-shell {
+                display: block;
+            }
+
+            .left-rail {
+                position: static;
+                margin-bottom: 1rem;
+            }
+
+            .section-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .domain-tree {
+            display: grid;
+            gap: 0.45rem;
+            font-size: 0.86rem;
+        }
+
+        .tree-domain {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface);
+        }
+
+        .tree-domain-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.55rem 0.65rem;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .tree-domain.active .tree-domain-header {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .tree-domain-body {
+            display: none;
+            border-top: 1px solid var(--border);
+            padding: 0.55rem 0.65rem 0.65rem;
+        }
+
+        .tree-domain.active .tree-domain-body {
+            display: grid;
+            gap: 0.35rem;
+        }
+
+        .tree-subdomain {
+            color: var(--text);
+            font-weight: 800;
+            font-size: 0.82rem;
+        }
+
+        .tree-article-list {
+            display: grid;
+            gap: 0.2rem;
+            margin-left: 0.45rem;
+            border-left: 1px solid var(--border);
+            padding-left: 0.5rem;
+        }
+
+        .tree-article-list a {
+            display: block;
+            border-radius: 9px;
+            padding: 0.34rem 0.45rem;
+            color: var(--muted);
+            line-height: 1.25;
+        }
+
+        .tree-article-list a.active {
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        .tree-status {
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="brand" href="#">mroux</a>
+            <nav class="top-nav" aria-label="Primary navigation">
+                <a href="#">About</a>
+                <a href="#">Projects</a>
+                <a href="#">Writing</a>
+                <a href="#">Systems</a>
+                <a href="#">Stats</a>
+            </nav>
+        </div>
+    </header>
+    <div class="page-shell">
+        <aside class="left-rail" aria-label="Page navigation">
+            <div class="rail-card">
+                <p class="rail-eyebrow">Knowledge Context</p>
+                <nav class="domain-tree" aria-label="Knowledge hierarchy navigation">
+                    <section class="tree-domain active">
+                        <div class="tree-domain-header">
+                            <span>Infrastructure</span>
+                            <span class="tree-status">active</span>
+                        </div>
+                        <div class="tree-domain-body">
+                            <div class="tree-subdomain">DNS</div>
+                            <div class="tree-article-list">
+                                <a class="active" href="#">DNSSEC Migration</a>
+                                <a href="#">Trust Chains</a>
+                                <a href="#">Resolver Behavior</a>
+                                <a href="#">Cloudflare DNS</a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="tree-domain">
+                        <div class="tree-domain-header"><span>Distributed Systems</span><span
+                                class="tree-status">related</span></div>
+                    </section>
+                    <section class="tree-domain">
+                        <div class="tree-domain-header"><span>Data Systems</span><span class="tree-status">nearby</span>
+                        </div>
+                    </section>
+                    <section class="tree-domain">
+                        <div class="tree-domain-header"><span>Software Engineering</span><span
+                                class="tree-status">muted</span></div>
+                    </section>
+                    <section class="tree-domain">
+                        <div class="tree-domain-header"><span>AI Systems</span><span class="tree-status">muted</span>
+                        </div>
+                    </section>
+                </nav>
+            </div>
+        </aside>
+        <main>
+            <article class="article-card">
+                <p class="article-kicker">Infrastructure · DNSSEC · Observability</p>
+                <h1>Polling Distributed State Instead of Sleeping</h1>
+                <p class="lede">
+                    A DNSSEC migration investigation showing why observable distributed state is more useful than
+                    blindly waiting fixed provider timelines.
+                </p>
+                <div class="mobile-context">
+                    <strong>Atlas context:</strong> Infrastructure → DNSSEC. Related domains: Distributed Systems,
+                    Observability.
+                </div>
+                <section class="article-section">
+                    <h2>The operational problem</h2>
+                    <p>
+                        Provider documentation suggested waiting 24–48 hours after disabling DNSSEC before continuing a
+                        domain migration. Direct DNSSEC inspection showed that relevant trust-chain state could be
+                        observed rather than guessed.
+                    </p>
+                </section>
+                <section class="article-section">
+                    <h2>Why DNSSEC behaves like distributed state</h2>
+                    <p>
+                        The parent zone, authoritative nameservers, and recursive resolvers can temporarily disagree
+                        because they cache, refresh, and validate records independently.
+                    </p>
+                    <pre class="code-block">dig DS mroux.net @1.1.1.1
+dig DS mroux.net @8.8.8.8</pre>
+                </section>
+                <section class="article-section">
+                    <h2>The broader engineering lesson</h2>
+                    <p>
+                        In infrastructure workflows, polling observable state is often superior to fixed sleep timers.
+                        This pattern generalizes to deployments, failovers, stream processors, and cache invalidation
+                        workflows.
+                    </p>
+                </section>
+            </article>
+        </main>
+        <aside class="right-rail" aria-label="Reading progress and engineering systems atlas">
+            <div class="rail-card progress-card">
+                <p class="rail-eyebrow">Page Progress</p>
+                <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-meta">
+                    <span>42%</span>
+                    <span>On this page</span>
+                </div>
+                <nav class="progress-outline" aria-label="On this page">
+                    <a class="active" href="#">The operational problem</a>
+                    <a class="subheading" href="#">Provider wait windows</a>
+                    <a href="#">Why DNSSEC behaves like distributed state</a>
+                    <a class="subheading" href="#">Resolver cache divergence</a>
+                    <a class="subheading" href="#">Trust-chain validation</a>
+                    <a href="#">The broader engineering lesson</a>
+                </nav>
+            </div>
+            <div class="rail-card atlas-card">
+                <div class="atlas-title-row">
+                    <h2 class="atlas-title">Engineering Systems Atlas</h2>
+                    <span class="atlas-mode">GPS</span>
+                </div>
+                <div class="atlas-stack">
+                    <section class="domain-card infrastructure active">
+                        <div class="domain-header">
+                            <span class="label"><span class="dot"></span>Infrastructure</span>
+                            <span class="status">active</span>
+                        </div>
+                        <div class="domain-body">
+                            <div class="topic-grid">
+                                <a class="topic current" href="#">DNSSEC</a>
+                                <a class="topic" href="#">Cloudflare</a>
+                                <a class="topic" href="#">DNS</a>
+                                <a class="topic" href="#">Observability</a>
+                            </div>
+                            <div class="relation-row" aria-label="Related domains">
+                                <span class="relation-chip">Distributed state</span>
+                                <span class="relation-chip">Trust chain</span>
+                                <span class="relation-chip">Caching</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="domain-card distributed">
+                        <div class="domain-header">
+                            <span class="label"><span class="dot"></span>Distributed Systems</span>
+                            <span class="status">related</span>
+                        </div>
+                    </section>
+                    <section class="domain-card data">
+                        <div class="domain-header">
+                            <span class="label"><span class="dot"></span>Data Systems</span>
+                            <span class="status">nearby</span>
+                        </div>
+                    </section>
+                    <section class="domain-card software">
+                        <div class="domain-header">
+                            <span class="label"><span class="dot"></span>Software Engineering</span>
+                            <span class="status">muted</span>
+                        </div>
+                    </section>
+                    <section class="domain-card ai">
+                        <div class="domain-header">
+                            <span class="label"><span class="dot"></span>AI Systems</span>
+                            <span class="status">muted</span>
+                        </div>
+                    </section>
+                </div> <a class="atlas-footer-link" href="#">Open full atlas</a>
+            </div>
+        </aside>
+    </div>
+</body>
+
+</html>
