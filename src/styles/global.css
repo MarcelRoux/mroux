@@ -98,6 +98,17 @@ ul {
   text-align: center;
 }
 
+.site-footer-home {
+  margin-bottom: 0.35rem;
+}
+
+.site-footer-note {
+  margin: 0 auto;
+  max-width: 28rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .lede {
   color: var(--muted);
 }
