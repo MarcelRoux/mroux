@@ -4,7 +4,7 @@ description: "Efficiently perform analytics on a 20GB CSV file."
 status: "idea"
 created: "2026-05-23"
 updated: "2026-05-23"
-slug: ""
+slug: "duckdb-large-csv-file-handling"
 
 summary: >
   Needed to extract statistics out of a large data set.
@@ -48,11 +48,11 @@ artifacts:
   screenshots: []
   diagrams: []
   commands:
-    - Get min and max blocktimes.
+    - "Get min and max blocktimes."
     - Get statistics on throughput (average, P50, P90, P95, P99)
     - Get cardinality of data dimensions.
   datasets:
-    - 20GB CSV file
+    - "20GB CSV file"
 
 future_expansions: []
 ---
@@ -102,6 +102,20 @@ Capture:
 - future questions
 
 This section is intentionally flexible and may be messy while the idea is still forming.
+
+Example command used during the analysis:
+
+```text
+% duckdb -c "SELECT min(column12), max(column12) FROM read_csv_auto('assignment_delete_me.csv', header=False);"
+
+┌────────────────┬────────────────┐
+│ min(column12)  │ max(column12)  │
+│     int64      │     int64      │
+├────────────────┼────────────────┤
+│   1744830629   │   1744845017   │
+│ (1.74 billion) │ (1.74 billion) │
+└────────────────┴────────────────┘
+```
 
 ---
 
