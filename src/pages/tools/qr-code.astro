@@ -43,7 +43,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <input id="logoZoom" name="logoZoom" type="range" min="0" max="100" step="1" value="50" />
           </div>
           <div class="field-row">
-            <label for="logoMargin">Logo padding</label>
+            <label for="logoMargin">Logo exclusion buffer</label>
             <input id="logoMargin" name="logoMargin" type="range" min="0" max="24" value="8" />
           </div>
           <div class="field-row checkbox-row">
@@ -258,11 +258,23 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       Q: 0.25,
       H: 0.3
     };
+    const maxLogoExclusionUsage = 0.85;
 
     const form = controls;
     const getField = (name) => form.elements.namedItem(name);
     const toInt = (value) => Number.parseInt(value, 10);
     const toFloat = (value) => Number.parseFloat(value);
+    const hasLogo = () => Boolean(state.logoDataUrl);
+
+    const syncLogoErrorCorrectionLock = () => {
+      const errorCorrectionField = getField("errorCorrectionLevel");
+      const logoIsPresent = hasLogo();
+      errorCorrectionField.disabled = logoIsPresent;
+      if (logoIsPresent) {
+        state.errorCorrectionLevel = "H";
+        errorCorrectionField.value = "H";
+      }
+    };
 
     const updateFieldsFromState = () => {
       for (const key of Object.keys(safeDefaults)) {
@@ -319,6 +331,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
       if (state.margin < 8) warnings.push("Quiet zone is small; increase margin for better print reliability.");
       if (state.logoSize > 0.3) warnings.push("Logo covers a large share of the QR width; scanning may fail even if the PNG file stays small.");
+      if (hasLogo() && getLogoImageSize() >= maxLogoExclusionUsage) {
+        warnings.push("Logo plus exclusion buffer is near the safe limit for high error correction; reduce its size or buffer for more reliable scanning.");
+      }
       if (state.logoFileSize > 1024 * 1024) warnings.push("Uploaded logo is over 1MB and may affect performance.");
       return warnings;
     };
@@ -348,6 +363,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       state.logoDataUrl = "";
       state.extractedLogoColor = null;
       state.logoFileSize = 0;
+      syncLogoErrorCorrectionLock();
     };
 
     const setRuntimeError = (message) => {
@@ -473,35 +489,42 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       ctx.closePath();
     };
 
-    const drawLogoOverlay = async (ctx) => {
-      if (!state.logoDataUrl) return;
+    const getLogoImageSize = () => {
+      if (!hasLogo()) return 0;
+      const qrDrawingWidth = Math.max(1, state.size - state.margin * 2);
+      const exclusionWidth = state.size * state.logoSize + state.logoMargin * 2;
+      const exclusionShare = Math.min(1, exclusionWidth / qrDrawingWidth);
+      return Math.min(maxLogoExclusionUsage, (exclusionShare ** 2) / errorCorrectionCoverage.H);
+    };
+
+    const createLogoPlate = async () => {
+      if (!hasLogo()) return undefined;
 
       const image = await loadImage(state.logoDataUrl);
-      const logoWidth = state.size * state.logoSize;
-      const logoHeight = state.logoCropMode === "none" ? (logoWidth * image.height) / image.width : logoWidth;
-      const logoX = (state.size - logoWidth) / 2;
-      const logoY = (state.size - logoHeight) / 2;
-      const backingX = logoX - state.logoMargin;
-      const backingY = logoY - state.logoMargin;
-      const backingWidth = logoWidth + state.logoMargin * 2;
-      const backingHeight = logoHeight + state.logoMargin * 2;
+      const side = 500;
+      const requestedExclusionWidth = state.size * state.logoSize + state.logoMargin * 2;
+      const inset = Math.min(side / 2, (state.logoMargin / requestedExclusionWidth) * side);
+      const canvas = document.createElement("canvas");
+      canvas.width = side;
+      canvas.height = side;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas context unavailable.");
 
-      ctx.save();
       ctx.fillStyle = "#ffffff";
       if (state.logoCropMode === "circle") {
         ctx.beginPath();
-        ctx.arc(state.size / 2, state.size / 2, Math.max(backingWidth, backingHeight) / 2, 0, Math.PI * 2);
-        ctx.closePath();
+        ctx.arc(side / 2, side / 2, side / 2, 0, Math.PI * 2);
         ctx.fill();
       } else if (state.logoCropMode === "rounded") {
-        drawRoundedRect(ctx, backingX, backingY, backingWidth, backingHeight, Math.min(backingWidth, backingHeight) * 0.18);
+        drawRoundedRect(ctx, 0, 0, side, side, side * 0.18);
         ctx.fill();
       } else {
-        ctx.fillRect(backingX, backingY, backingWidth, backingHeight);
+        ctx.fillRect(0, 0, side, side);
       }
-      ctx.restore();
 
-      ctx.drawImage(image, logoX, logoY, logoWidth, logoHeight);
+      const imageSize = side - inset * 2;
+      ctx.drawImage(image, inset, inset, imageSize, imageSize);
+      return canvas.toDataURL("image/png");
     };
 
     const downloadCanvas = (canvas, filename) => {
@@ -541,6 +564,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       state.logoZoom = toInt(getField("logoZoom").value);
       state.logoMargin = toInt(getField("logoMargin").value);
       state.autoColor = getField("autoColor").checked;
+      syncLogoErrorCorrectionLock();
     };
 
     const qr = new QRCodeStyling({
@@ -564,6 +588,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const currentToken = ++renderToken;
       try {
         setButtonsDisabled('[data-action="download"]', true);
+        const logoPlate = await createLogoPlate();
+        if (currentToken !== renderToken) return;
         qr.update({
           width: state.size,
           height: state.size,
@@ -574,8 +600,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           backgroundOptions: { color: state.transparentBackground ? "transparent" : state.background },
           cornersSquareOptions: { color: state.foreground, type: state.cornersSquareStyle },
           cornersDotOptions: { color: state.foreground, type: state.cornersDotStyle },
-          image: undefined,
-          imageOptions: { hideBackgroundDots: true, imageSize: 0, margin: 0 }
+          image: logoPlate || "",
+          imageOptions: {
+            hideBackgroundDots: hasLogo(),
+            imageSize: getLogoImageSize(),
+            margin: 0
+          }
         });
 
         const blob = await qr.getRawData("png");
@@ -591,7 +621,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           if (!ctx) throw new Error("Preview canvas context unavailable.");
           ctx.clearRect(0, 0, state.size, state.size);
           ctx.drawImage(qrImage, 0, 0, state.size, state.size);
-          await drawLogoOverlay(ctx);
         } finally {
           URL.revokeObjectURL(objectUrl);
         }
@@ -622,6 +651,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       state.logoFileSize = file.size;
       state.logoDataUrl = processed.dataUrl;
       state.extractedLogoColor = processed.color;
+      syncLogoErrorCorrectionLock();
       if (state.autoColor && processed.color) {
         getField("foreground").value = processed.color;
       }
